@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GranaCheck - Conta</title>
+    <link rel="stylesheet" href="/style2.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="side-rail">
+        <div class="rail-brand">
+          <img src="/Icon-removebg-preview.png" alt="Logo GranaCheck" />
+          <div>
+            <strong>GranaCheck</strong>
+            <span>Finance Dashboard</span>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button type="button" class="rail-item" data-nav="login" data-route="/app/login">Login</button>
+          <button type="button" class="rail-item" data-nav="entradas" data-route="/app/entradas">Entradas Financeiras</button>
+          <button type="button" class="rail-item" data-nav="historico" data-route="/app/historico">Histórico</button>
+          <button type="button" class="rail-item" data-nav="info-calculo" data-route="/app/informacoes-calculo">Informações Úteis de Cálculo</button>
+          <button type="button" class="rail-item active" data-nav="conta" data-route="/app/conta">Conta</button>
+        </nav>
+        <div class="rail-footer">Versão estável</div>
+      </aside>
+
+      <main class="workspace">
+        <header class="app-topbar">
+          <div class="brand">
+            <div>
+              <h1>Status da Conta</h1>
+              <p>Pagamento, validação e data de expiração da assinatura</p>
+            </div>
+          </div>
+          <div id="user-badge" class="user-badge hidden">
+            <span id="user-name"></span>
+            <button id="logout-btn" type="button">Sair</button>
+          </div>
+        </header>
+
+        <section id="message-banner" class="message-banner hidden"></section>
+
+        <div class="content-grid account-grid">
+          <section id="account-profile-card" class="card info-card">
+            <h2>Dados da Conta</h2>
+            <div class="account-status-grid">
+              <div class="account-status-row">
+                <span>Nome Completo</span>
+                <strong id="account-full-name">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Matrícula</span>
+                <strong id="account-matricula">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>E-mail</span>
+                <strong id="account-email">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Cadastro</span>
+                <strong id="account-created-at">-</strong>
+              </div>
+            </div>
+          </section>
+
+          <section id="subscription-card" class="card info-card">
+            <h2>Conta e Assinatura</h2>
+            <div class="account-status-grid">
+              <div class="account-status-row">
+                <span>Status</span>
+                <strong id="subscription-status-text">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Validade</span>
+                <strong id="subscription-expiration-text">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Pagamento</span>
+                <strong id="subscription-payment-text">-</strong>
+              </div>
+            </div>
+            <p id="subscription-pix-text" class="pix-text"></p>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="/app-common.js" defer></script>
+    <script src="/account-page.js" defer></script>
+  </body>
+</html>

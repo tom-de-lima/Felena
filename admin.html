@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GranaCheck Admin</title>
+    <link rel="stylesheet" href="/style2.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="side-rail">
+        <div class="rail-brand">
+          <img src="/Icon-removebg-preview.png" alt="Logo GranaCheck" />
+          <div>
+            <strong>GranaCheck</strong>
+            <span>Admin Console</span>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button type="button" class="rail-item active" data-target="admin-subscriptions-card">Assinaturas</button>
+          <button type="button" class="rail-item" data-target="admin-users-card">Usuários</button>
+          <button type="button" class="rail-item" data-target="admin-audit-card">Auditoria</button>
+        </nav>
+        <div class="rail-footer">Sessão administrativa</div>
+      </aside>
+
+      <main class="workspace">
+        <header class="app-topbar">
+          <div class="brand">
+            <div>
+              <h1>Painel Administrativo</h1>
+              <p>Validação e gestão de assinaturas anuais via Pix</p>
+            </div>
+          </div>
+          <div class="user-badge">
+            <span>Administrador</span>
+            <button id="admin-logout-btn" type="button">Sair</button>
+          </div>
+        </header>
+
+        <section id="admin-message-banner" class="message-banner hidden"></section>
+
+        <div class="content-grid">
+          <section id="admin-subscriptions-card" class="card admin-card">
+            <h2>Controle de Assinaturas</h2>
+
+            <div class="admin-grid">
+              <form id="admin-confirm-form" class="mini-form">
+                <h3>Confirmar pagamento Pix</h3>
+                <label for="admin-email">Email do usuário</label>
+                <input id="admin-email" type="email" required />
+                <label for="admin-pix-reference">Referência Pix</label>
+                <input id="admin-pix-reference" type="text" placeholder="PIX-123" />
+                <label for="admin-paid-until">Válido até</label>
+                <input id="admin-paid-until" type="date" required />
+                <button type="submit">Confirmar assinatura</button>
+              </form>
+
+              <form id="admin-status-form" class="mini-form">
+                <h3>Atualizar status manual</h3>
+                <label for="admin-status-email">Email do usuário</label>
+                <input id="admin-status-email" type="email" required />
+                <label for="admin-status-value">Novo status</label>
+                <select id="admin-status-value">
+                  <option value="PENDING">PENDENTE</option>
+                  <option value="EXPIRED">EXPIRADO</option>
+                  <option value="CANCELED">CANCELADO</option>
+                </select>
+                <button type="submit">Aplicar status</button>
+              </form>
+            </div>
+
+            <div class="admin-actions">
+              <input id="admin-filter-q" type="text" placeholder="Buscar por nome ou email" />
+              <select id="admin-filter-status">
+                <option value="ALL">Todos</option>
+                <option value="PENDING">Pendentes</option>
+                <option value="ACTIVE">Ativos</option>
+                <option value="EXPIRED">Expirados</option>
+                <option value="CANCELED">Cancelados</option>
+              </select>
+              <button id="admin-refresh-pending" type="button">Atualizar lista</button>
+            </div>
+            <ul id="admin-pending-list" class="history-list"></ul>
+          </section>
+
+          <section id="admin-users-card" class="card info-card">
+            <h2>Resumo de usuários</h2>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span>Total listados</span>
+                <strong id="stat-total-users">0</strong>
+              </div>
+              <div class="stat-box">
+                <span>Ativos</span>
+                <strong id="stat-active-users">0</strong>
+              </div>
+              <div class="stat-box">
+                <span>Pendentes</span>
+                <strong id="stat-pending-users">0</strong>
+              </div>
+              <div class="stat-box">
+                <span>Expirados</span>
+                <strong id="stat-expired-users">0</strong>
+              </div>
+              <div class="stat-box">
+                <span>Cancelados</span>
+                <strong id="stat-canceled-users">0</strong>
+              </div>
+            </div>
+          </section>
+
+          <section id="admin-audit-card" class="card">
+            <h2>Auditoria da sessão</h2>
+            <ul id="admin-audit-list" class="history-list"></ul>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="/admin.js" defer></script>
+  </body>
+</html>

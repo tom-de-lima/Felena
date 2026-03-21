@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GranaCheck - Login</title>
+    <link rel="stylesheet" href="/style2.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="side-rail">
+        <div class="rail-brand">
+          <img src="/Icon-removebg-preview.png" alt="Logo GranaCheck" />
+          <div>
+            <strong>GranaCheck</strong>
+            <span>Finance Dashboard</span>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button type="button" class="rail-item active" data-nav="login" data-route="/app/login">Login</button>
+          <button type="button" class="rail-item" data-nav="entradas" data-route="/app/entradas">Entradas Financeiras</button>
+          <button type="button" class="rail-item" data-nav="historico" data-route="/app/historico">Histórico</button>
+          <button type="button" class="rail-item" data-nav="info-calculo" data-route="/app/informacoes-calculo">Informações Úteis de Cálculo</button>
+          <button type="button" class="rail-item" data-nav="conta" data-route="/app/conta">Conta</button>
+        </nav>
+        <div class="rail-footer">Versão estável</div>
+      </aside>
+
+      <main class="workspace">
+        <header class="app-topbar">
+          <div class="brand">
+            <div>
+              <h1>Área de Acesso</h1>
+              <p>Autenticação de usuários e administradores</p>
+            </div>
+          </div>
+          <div id="user-badge" class="user-badge hidden">
+            <span id="user-name"></span>
+            <button id="logout-btn" type="button">Sair</button>
+          </div>
+        </header>
+
+        <section id="message-banner" class="message-banner hidden"></section>
+
+        <div class="content-grid single-page">
+          <section id="already-logged-box" class="card info-card hidden">
+            <h2>Sessão ativa</h2>
+            <p>Você já está autenticado no sistema.</p>
+            <div class="account-status-grid">
+              <div class="account-status-row">
+                <span>Status da conta</span>
+                <strong id="already-status">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Validade</span>
+                <strong id="already-expiry">-</strong>
+              </div>
+            </div>
+          </section>
+
+          <section id="auth-card" class="card auth-card">
+            <h2>Login, Cadastro e Segurança</h2>
+            <p>Use sua conta para acessar o dashboard financeiro.</p>
+
+            <div class="auth-grid">
+              <form id="login-form" class="mini-form">
+                <h3>Login</h3>
+                <label for="login-email">Email</label>
+                <input id="login-email" type="email" required />
+                <label for="login-password">Senha</label>
+                <input id="login-password" type="password" required minlength="6" />
+                <button type="submit">Entrar</button>
+              </form>
+
+              <form id="register-form" class="mini-form">
+                <h3>Criar conta</h3>
+                <label for="register-full-name">Nome Completo</label>
+                <input id="register-full-name" type="text" required />
+                <label for="register-matricula">Matrícula</label>
+                <input id="register-matricula" type="text" required />
+                <label for="register-email">Email</label>
+                <input id="register-email" type="email" required />
+                <label for="register-password">Senha</label>
+                <input id="register-password" type="password" required minlength="6" />
+                <button type="submit">Cadastrar</button>
+              </form>
+            </div>
+
+            <div class="auth-grid secondary-auth-grid">
+              <form id="reset-request-form" class="mini-form">
+                <h3>Recuperar senha</h3>
+                <label for="reset-email">Email da conta</label>
+                <input id="reset-email" type="email" required />
+                <button type="submit">Enviar link</button>
+              </form>
+
+              <form id="reset-confirm-form" class="mini-form">
+                <h3>Redefinir senha</h3>
+                <label for="reset-token">Token recebido</label>
+                <input id="reset-token" type="text" required />
+                <label for="reset-new-password">Nova senha</label>
+                <input id="reset-new-password" type="password" required minlength="6" />
+                <button type="submit">Atualizar senha</button>
+              </form>
+            </div>
+
+            <form id="admin-access-form" class="mini-form admin-access-form">
+              <h3>Acesso administrativo</h3>
+              <label for="admin-login-email">Email admin</label>
+              <input id="admin-login-email" type="email" required />
+              <label for="admin-login-password">Senha admin</label>
+              <input id="admin-login-password" type="password" required />
+              <button type="submit">Entrar no painel admin</button>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="/app-common.js" defer></script>
+    <script src="/login-page.js" defer></script>
+  </body>
+</html>

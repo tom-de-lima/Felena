@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GranaCheck - Entradas Financeiras</title>
+    <link rel="stylesheet" href="/style2.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="side-rail">
+        <div class="rail-brand">
+          <img src="/Icon-removebg-preview.png" alt="Logo GranaCheck" />
+          <div>
+            <strong>GranaCheck</strong>
+            <span>Finance Dashboard</span>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button type="button" class="rail-item" data-nav="login" data-route="/app/login">Login</button>
+          <button type="button" class="rail-item active" data-nav="entradas" data-route="/app/entradas">Entradas Financeiras</button>
+          <button type="button" class="rail-item" data-nav="historico" data-route="/app/historico">Histórico</button>
+          <button type="button" class="rail-item" data-nav="info-calculo" data-route="/app/informacoes-calculo">Informações Úteis de Cálculo</button>
+          <button type="button" class="rail-item" data-nav="conta" data-route="/app/conta">Conta</button>
+        </nav>
+        <div class="rail-footer">Versão estável</div>
+      </aside>
+
+      <main class="workspace">
+        <header class="app-topbar">
+          <div class="brand">
+            <div>
+              <h1>Entradas Financeiras</h1>
+              <p>Lançamento mensal de dados para cálculo de remuneração</p>
+            </div>
+          </div>
+          <div id="user-badge" class="user-badge hidden">
+            <span id="user-name"></span>
+            <button id="logout-btn" type="button">Sair</button>
+          </div>
+        </header>
+
+        <section id="message-banner" class="message-banner hidden"></section>
+
+        <div class="content-grid single-page">
+          <section class="card info-card">
+            <h2>Status operacional</h2>
+            <p id="entries-account-hint"></p>
+          </section>
+
+          <section id="calculator-card" class="card">
+            <h2>Entradas Financeiras</h2>
+            <form id="remuneracao-form">
+              <div class="form-block">
+                <h3>Dados principais</h3>
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="baseAtual">Salário Base Atual (R$)</label>
+                    <input type="text" id="baseAtual" placeholder="0,00" required />
+                  </div>
+                  <div class="field">
+                    <label for="plantoes">Quantidade de Plantões</label>
+                    <select id="plantoes" required>
+                      <option value="7">7 plantões</option>
+                      <option value="8">8 plantões</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="escolaridade">Escolaridade</label>
+                    <select id="escolaridade" required>
+                      <option value="1">Sem ensino superior</option>
+                      <option value="2">Graduação</option>
+                      <option value="3">Pós-graduação</option>
+                      <option value="4">Mestrado/Doutorado</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="quinquenio">Quantidade de Quinquênios</label>
+                    <input type="number" id="quinquenio" min="0" value="0" />
+                  </div>
+                  <div class="field">
+                    <label for="especializacao">Serviço Especializado</label>
+                    <select id="especializacao">
+                      <option value="0">Nenhum</option>
+                      <option value="15">15%</option>
+                      <option value="25">25%</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <h3>Gratificação por função (cumulativa)</h3>
+                <div class="checkbox-grid">
+                  <label class="check-row"><input type="checkbox" name="gratificacaoFuncao" value="comandante" />Comandante (100%)</label>
+                  <label class="check-row"><input type="checkbox" name="gratificacaoFuncao" value="subcomandante" />Subcomandante (85%)</label>
+                  <label class="check-row"><input type="checkbox" name="gratificacaoFuncao" value="inspetor" />Inspetor (75%)</label>
+                  <label class="check-row"><input type="checkbox" name="gratificacaoFuncao" value="subinspetor" />Subinspetor (50%)</label>
+                  <label class="check-row"><input type="checkbox" name="gratificacaoFuncao" value="auxiliar_corregedoria" />Auxiliar de Corregedoria (20%)</label>
+                  <label class="check-row"><input type="checkbox" name="gratificacaoFuncao" value="corregedor" />Corregedor (70%)</label>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <h3>Extras e descontos</h3>
+                <div class="field-grid">
+                  <div class="field"><label for="extra24">Serviço Extra 24h (cotas)</label><input type="number" id="extra24" min="0" value="0" /></div>
+                  <div class="field"><label for="extra10diurno">Serviço Extra 10h Diurno (cotas)</label><input type="number" id="extra10diurno" min="0" value="0" /></div>
+                  <div class="field"><label for="extra10noturno">Serviço Extra 10h Noturno (cotas)</label><input type="number" id="extra10noturno" min="0" value="0" /></div>
+                  <div class="field"><label for="extraFestivo">Serviço Extra Festivo (cotas)</label><input type="number" id="extraFestivo" min="0" value="0" /></div>
+                  <div class="field"><label for="valorExtraFestivo">Valor Extra Festivo (R$)</label><input type="text" id="valorExtraFestivo" placeholder="0,00" /></div>
+                  <div class="field"><label for="dependentes">Dependentes (IR)</label><input type="number" id="dependentes" min="0" value="0" /></div>
+                  <div class="field"><label for="sindicalizado">Sindicalizado?</label><select id="sindicalizado"><option value="0">Não</option><option value="1">Sim</option></select></div>
+                  <div class="field"><label for="pensaoAtiva">Possui Pensão Alimentícia?</label><select id="pensaoAtiva"><option value="0">Não</option><option value="1">Sim</option></select></div>
+                  <div id="pensaoValorField" class="field hidden"><label for="pensaoValor">Valor da Pensão (R$)</label><input type="text" id="pensaoValor" placeholder="0,00" /></div>
+                  <div class="field"><label for="outrosDescontos">Descontos Individuais (R$)</label><input type="text" id="outrosDescontos" placeholder="0,00" /></div>
+                  <div class="field"><label for="ferias">Vai sair de férias?</label><select id="ferias"><option value="0" selected>Não</option><option value="1">Sim</option></select></div>
+                </div>
+              </div>
+              <button type="submit">Calcular e Salvar</button>
+            </form>
+          </section>
+
+          <section id="result-card" class="card hidden">
+            <h2>Resultado Atual</h2>
+            <div id="print-header" class="print-only">
+              <p id="text_report">Relatório com gratificações, descontos e totais calculados pelo GranaCheck.</p>
+              <p id="print-date"></p>
+            </div>
+            <section id="resultados"></section>
+            <div class="print-control">
+              <button type="button" id="print-btn">Imprimir</button>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="/app-common.js" defer></script>
+    <script src="/entries-page.js" defer></script>
+  </body>
+</html>

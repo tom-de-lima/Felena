@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GranaCheck - Informações Úteis de Cálculo</title>
+    <link rel="stylesheet" href="/style2.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="side-rail">
+        <div class="rail-brand">
+          <img src="/Icon-removebg-preview.png" alt="Logo GranaCheck" />
+          <div>
+            <strong>GranaCheck</strong>
+            <span>Finance Dashboard</span>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button type="button" class="rail-item" data-nav="login" data-route="/app/login">Login</button>
+          <button type="button" class="rail-item" data-nav="entradas" data-route="/app/entradas">Entradas Financeiras</button>
+          <button type="button" class="rail-item" data-nav="historico" data-route="/app/historico">Histórico</button>
+          <button type="button" class="rail-item active" data-nav="info-calculo" data-route="/app/informacoes-calculo">Informações Úteis de Cálculo</button>
+          <button type="button" class="rail-item" data-nav="conta" data-route="/app/conta">Conta</button>
+        </nav>
+        <div class="rail-footer">Versão estável</div>
+      </aside>
+
+      <main class="workspace">
+        <header class="app-topbar">
+          <div class="brand">
+            <div>
+              <h1>Informações Úteis de Cálculo</h1>
+              <p>Parâmetros e quantitativos da última apuração mensal</p>
+            </div>
+          </div>
+          <div id="user-badge" class="user-badge hidden">
+            <span id="user-name"></span>
+            <button id="logout-btn" type="button">Sair</button>
+          </div>
+        </header>
+
+        <section id="message-banner" class="message-banner hidden"></section>
+
+        <div class="content-grid single-page">
+          <section class="card info-card">
+            <h2>Última referência calculada</h2>
+            <p id="calc-info-month">Carregando referência...</p>
+          </section>
+
+          <section class="card" id="calc-useful-card">
+            <h2>Parâmetros de cálculo</h2>
+            <div class="account-status-grid">
+              <div class="account-status-row">
+                <span>Horas de adicional noturno</span>
+                <strong id="info-night-hours">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Horas excedentes com adicional de 50%</span>
+                <strong id="info-ex50-hours">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Horas excedentes com adicional de 70%</span>
+                <strong id="info-ex70-hours">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Auxílios-alimentação considerados</span>
+                <strong id="info-aux-qty">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Regra aplicada no Imposto de Renda</span>
+                <strong id="info-ir-rule">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Base de Cálculo do Imposto de Renda (IR)</span>
+                <strong id="info-ir-base">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Desconto da fórmula da faixa intermediária</span>
+                <strong id="info-ir-formula-discount">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Total bruto armazenado</span>
+                <strong id="info-total-bruto">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Total líquido armazenado</span>
+                <strong id="info-total-liquido">-</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="/app-common.js" defer></script>
+    <script src="/calculation-info-page.js" defer></script>
+  </body>
+</html>
