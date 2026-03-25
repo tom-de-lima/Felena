@@ -137,7 +137,8 @@
   function setupMobileMenuShell() {
     const sideRail = document.querySelector(".side-rail")
     const topbar = document.querySelector(".app-topbar")
-    if (!sideRail || !topbar) return
+    const appLayout = document.querySelector(".app-layout")
+    if (!sideRail || !topbar || !appLayout) return
 
     if (!topbar.querySelector(".menu-toggle-btn")) {
       const menuButton = document.createElement("button")
@@ -155,7 +156,7 @@
       overlay.className = "app-overlay"
       overlay.setAttribute("aria-label", "Fechar menu")
       overlay.addEventListener("click", closeMobileMenu)
-      document.body.appendChild(overlay)
+      appLayout.appendChild(overlay)
     }
 
     if (!window.__gcMobileMenuEventsBound) {
