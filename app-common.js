@@ -2,6 +2,7 @@
   const tokenKey = "gc_auth_token"
   const flashKey = "gc_flash_message"
   const appTimeZone = "America/Fortaleza"
+  const mobileMenuOpenClass = "mobile-nav-open"
 
   function getToken() {
     return localStorage.getItem(tokenKey) || ""
@@ -94,6 +95,8 @@
   }
 
   function setupSidebarNavigation(currentRoute, isLoggedIn) {
+    setupMobileMenuShell()
+
     const routeToTarget = {
       "/app/login": "login",
       "/app/entradas": "entradas",
@@ -110,6 +113,8 @@
       item.setAttribute("aria-current", isCurrent ? "page" : "false")
 
       item.addEventListener("click", () => {
+        closeMobileMenu()
+
         const destination = item.dataset.route
         if (!destination) return
 
@@ -127,6 +132,49 @@
         window.location.assign(destination)
       })
     })
+  }
+
+  function setupMobileMenuShell() {
+    const sideRail = document.querySelector(".side-rail")
+    const topbar = document.querySelector(".app-topbar")
+    if (!sideRail || !topbar) return
+
+    if (!topbar.querySelector(".menu-toggle-btn")) {
+      const menuButton = document.createElement("button")
+      menuButton.type = "button"
+      menuButton.className = "menu-toggle-btn"
+      menuButton.setAttribute("aria-label", "Abrir menu de navegação")
+      menuButton.textContent = "Menu"
+      menuButton.addEventListener("click", toggleMobileMenu)
+      topbar.prepend(menuButton)
+    }
+
+    if (!document.querySelector(".app-overlay")) {
+      const overlay = document.createElement("button")
+      overlay.type = "button"
+      overlay.className = "app-overlay"
+      overlay.setAttribute("aria-label", "Fechar menu")
+      overlay.addEventListener("click", closeMobileMenu)
+      document.body.appendChild(overlay)
+    }
+
+    if (!window.__gcMobileMenuEventsBound) {
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeMobileMenu()
+      })
+      window.addEventListener("resize", () => {
+        if (window.innerWidth > 980) closeMobileMenu()
+      })
+      window.__gcMobileMenuEventsBound = true
+    }
+  }
+
+  function toggleMobileMenu() {
+    document.body.classList.toggle(mobileMenuOpenClass)
+  }
+
+  function closeMobileMenu() {
+    document.body.classList.remove(mobileMenuOpenClass)
   }
 
   function setupLogout() {
@@ -201,5 +249,6 @@
     setupLogout,
     formatDateBR,
     formatDateTimeBR,
+    closeMobileMenu,
   }
 })()
