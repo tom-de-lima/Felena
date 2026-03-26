@@ -96,54 +96,58 @@ function calculateIncomeTax(baseCalculoIR) {
   return baseCalculoIR * 0.275 - 908.73
 }
 
-function calculateIncomeMax(baseCalculoIR) {
-  return baseCalculoIR * 0.275 - 908.73
-}
-
 function calculateIncomeTaxWithNewRules({
-  baseCalculoIR,
+  baseCalculoIRAntiga,
   totalBruto,
   auxAlimentacao,
   valorEspecializacao,
   pensaoAlimenticia,
 }) {
-  if (baseCalculoIR <= 5000) {
+  const valorIRRegraAntiga = Math.max(0, calculateIncomeTax(baseCalculoIRAntiga))
+  const baseCalculoIRNova =
+    totalBruto - (auxAlimentacao + valorEspecializacao + pensaoAlimenticia)
+  const descontoIR = 978.62 - 0.133145 * baseCalculoIRNova
+
+  if (baseCalculoIRNova <= 5000) {
     return {
       impostoFinal: 0,
+      valorIRRegraAntiga,
+      baseCalculoIRNova,
+      descontoIR: null,
       descontoFormulaAplicado: null,
       formulaElegivel: false,
     }
   }
 
-  if (baseCalculoIR < 7350) {
-    const impostoBase = calculateIncomeTax(baseCalculoIR)
-    const ajuste =
-      978.62 -
-      0.133145 *
-        (totalBruto -
-          (auxAlimentacao + valorEspecializacao + pensaoAlimenticia))
+  if (baseCalculoIRNova <= 7350) {
     return {
-      impostoFinal: Math.max(0, impostoBase - ajuste),
-      descontoFormulaAplicado: ajuste,
+      impostoFinal: Math.max(0, valorIRRegraAntiga - descontoIR),
+      valorIRRegraAntiga,
+      baseCalculoIRNova,
+      descontoIR,
+      descontoFormulaAplicado: descontoIR,
       formulaElegivel: true,
     }
   }
 
   return {
-    impostoFinal: Math.max(0, calculateIncomeMax(baseCalculoIR)),
+    impostoFinal: valorIRRegraAntiga,
+    valorIRRegraAntiga,
+    baseCalculoIRNova,
+    descontoIR: null,
     descontoFormulaAplicado: null,
     formulaElegivel: false,
   }
 }
 
-function getIncomeTaxRuleLabel(baseCalculoIR) {
-  if (baseCalculoIR <= 5000) {
+function getIncomeTaxRuleLabel(baseCalculoIRNova) {
+  if (baseCalculoIRNova <= 5000) {
     return "Isenção até R$ 5.000,00"
   }
-  if (baseCalculoIR < 7350) {
+  if (baseCalculoIRNova <= 7350) {
     return "Faixa intermediária (R$ 5.000,01 a R$ 7.349,99) com ajuste complementar"
   }
-  return "Faixa superior (>= R$ 7.350,00) com calculateIncomeMax"
+  return "Faixa superior (>= R$ 7.350,00) sem desconto complementar"
 }
 
 function validateCalculation(calculation) {
@@ -276,7 +280,7 @@ function calculateCompensation(rawInput) {
   const valorDependentes = 189.59 * input.dependentes
   const pensaoAlimenticia = input.pensaoValor
 
-  const baseCalculoIR = totalBruto - (
+  const baseCalculoIRAntiga = totalBruto - (
     previdencia +
     auxAlimentacao +
     valorEspecializacao +
@@ -285,7 +289,7 @@ function calculateCompensation(rawInput) {
   )
 
   const taxResult = calculateIncomeTaxWithNewRules({
-    baseCalculoIR,
+    baseCalculoIRAntiga,
     totalBruto,
     auxAlimentacao,
     valorEspecializacao,
@@ -303,7 +307,7 @@ function calculateCompensation(rawInput) {
 
   const totalDescontos = discountItems.reduce((sum, item) => sum + item.value, 0)
   const totalLiquido = totalBruto - totalDescontos
-  const regraImpostoRenda = getIncomeTaxRuleLabel(baseCalculoIR)
+  const regraImpostoRenda = getIncomeTaxRuleLabel(taxResult.baseCalculoIRNova)
 
   const calculated = {
     normalizedInput: input,
@@ -313,7 +317,8 @@ function calculateCompensation(rawInput) {
       totalBrutoRaw: totalBruto,
       totalDescontosRaw: totalDescontos,
       totalLiquidoRaw: totalLiquido,
-      baseCalculoIRRaw: baseCalculoIR,
+      baseCalculoIRRaw: baseCalculoIRAntiga,
+      baseCalculoIRNovaRaw: taxResult.baseCalculoIRNova,
     },
   }
 
@@ -333,7 +338,8 @@ function calculateCompensation(rawInput) {
       totalBruto: roundCurrency(totalBruto),
       totalDescontos: roundCurrency(totalDescontos),
       totalLiquido: roundCurrency(totalLiquido),
-      baseCalculoIR: roundCurrency(baseCalculoIR),
+      baseCalculoIR: roundCurrency(baseCalculoIRAntiga),
+      baseCalculoIRNova: roundCurrency(taxResult.baseCalculoIRNova),
     },
     reservas: {
       sugestaoReserva10: roundCurrency(totalLiquido * 0.1),
@@ -352,9 +358,11 @@ function calculateCompensation(rawInput) {
       quantidadeHorasExcedentes70: roundCurrency(shiftRules.ex70),
       quantidadeAuxiliosAlimentacao: roundCurrency(quantidadeAuxiliosAlimentacao),
       regraImpostoRenda,
-      baseCalculoImpostoRenda: roundCurrency(baseCalculoIR),
+      baseCalculoImpostoRenda: roundCurrency(taxResult.baseCalculoIRNova),
+      baseCalculoImpostoRendaAntiga: roundCurrency(baseCalculoIRAntiga),
+      valorIRRegraAntiga: roundCurrency(taxResult.valorIRRegraAntiga),
       descontoFormulaIntermediaria: taxResult.formulaElegivel
-        ? roundCurrency(taxResult.descontoFormulaAplicado)
+        ? roundCurrency(taxResult.descontoIR)
         : null,
     },
   }
