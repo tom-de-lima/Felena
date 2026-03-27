@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GranaCheck - Conta</title>
+    <title>GranaCheck - Comprometimento e Reserva</title>
     <link rel="stylesheet" href="/style2.css" />
   </head>
   <body>
@@ -21,8 +21,8 @@
           <button type="button" class="rail-item" data-nav="entradas" data-route="/app/entradas">Entradas Financeiras</button>
           <button type="button" class="rail-item" data-nav="historico" data-route="/app/historico">Histórico</button>
           <button type="button" class="rail-item" data-nav="info-calculo" data-route="/app/informacoes-calculo">Informações Úteis de Cálculo</button>
-          <button type="button" class="rail-item" data-nav="comprometimento-reserva" data-route="/app/comprometimento-reserva">Comprometimento e Reserva</button>
-          <button type="button" class="rail-item active" data-nav="conta" data-route="/app/conta">Conta</button>
+          <button type="button" class="rail-item active" data-nav="comprometimento-reserva" data-route="/app/comprometimento-reserva">Comprometimento e Reserva</button>
+          <button type="button" class="rail-item" data-nav="conta" data-route="/app/conta">Conta</button>
         </nav>
         <div class="rail-footer">Versão estável</div>
       </aside>
@@ -31,8 +31,8 @@
         <header class="app-topbar">
           <div class="brand">
             <div>
-              <h1>Status da Conta</h1>
-              <p>Pagamento, validação e data de expiração da assinatura</p>
+              <h1>Comprometimento de Renda e Reserva Financeira</h1>
+              <p>Análise anual de descontos e projeção de reserva com juros compostos</p>
             </div>
           </div>
           <div id="user-badge" class="user-badge hidden">
@@ -43,51 +43,53 @@
 
         <section id="message-banner" class="message-banner hidden"></section>
 
-        <div class="content-grid account-grid">
-          <section id="account-profile-card" class="card info-card">
-            <h2>Dados da Conta</h2>
-            <div class="account-status-grid">
-              <div class="account-status-row">
-                <span>Nome Completo</span>
-                <strong id="account-full-name">-</strong>
-              </div>
-              <div class="account-status-row">
-                <span>Matrícula</span>
-                <strong id="account-matricula">-</strong>
-              </div>
-              <div class="account-status-row">
-                <span>E-mail</span>
-                <strong id="account-email">-</strong>
-              </div>
-              <div class="account-status-row">
-                <span>Cadastro</span>
-                <strong id="account-created-at">-</strong>
-              </div>
-            </div>
+        <div class="content-grid single-page">
+          <section class="card info-card">
+            <h2>Referência da análise</h2>
+            <p id="commitment-reference">Carregando informações...</p>
           </section>
 
-          <section id="subscription-card" class="card info-card">
-            <h2>Conta e Assinatura</h2>
-            <div class="account-status-grid">
-              <div class="account-status-row">
-                <span>Status</span>
-                <strong id="subscription-status-text">-</strong>
+          <section class="card" id="commitment-discounts-card">
+            <h2>Análise de descontos</h2>
+            <div class="commitment-summary">
+              <div class="stat-box">
+                <span>Média mensal bruta</span>
+                <strong id="commitment-avg-gross">-</strong>
               </div>
-              <div class="account-status-row">
-                <span>Validade</span>
-                <strong id="subscription-expiration-text">-</strong>
-              </div>
-              <div class="account-status-row">
-                <span>Pagamento</span>
-                <strong id="subscription-payment-text">-</strong>
+              <div class="stat-box">
+                <span>Média mensal líquida</span>
+                <strong id="commitment-avg-net">-</strong>
               </div>
             </div>
-            <p id="subscription-pix-text" class="pix-text"></p>
+            <div id="commitment-discounts-list" class="commitment-grid"></div>
+          </section>
+
+          <section class="card" id="commitment-reserve-card">
+            <h2>Sugestão de reserva financeira</h2>
+            <div class="account-status-grid">
+              <div class="account-status-row">
+                <span>Percentual sugerido para reserva</span>
+                <strong id="reserve-percent">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Valor mensal sugerido para reserva</span>
+                <strong id="reserve-monthly">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Rendimento considerado</span>
+                <strong id="reserve-rate">-</strong>
+              </div>
+              <div class="account-status-row">
+                <span>Total acumulado em 12 meses</span>
+                <strong id="reserve-total">-</strong>
+              </div>
+            </div>
           </section>
         </div>
       </main>
     </div>
+
     <script src="/app-common.js" defer></script>
-    <script src="/account-page.js" defer></script>
+    <script src="/commitment-reserve-page.js" defer></script>
   </body>
 </html>

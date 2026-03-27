@@ -103,6 +103,7 @@
       "/app/historico": "historico",
       "/app/conta": "conta",
       "/app/informacoes-calculo": "info-calculo",
+      "/app/comprometimento-reserva": "comprometimento-reserva",
     }
 
     const targetKey = routeToTarget[currentRoute] || "login"

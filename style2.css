@@ -548,6 +548,54 @@ button:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.commitment-summary {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  margin-bottom: 0.75rem;
+}
+
+.commitment-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.commitment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(170px, 0.8fr));
+  gap: 0.6rem;
+  border: 1px solid rgba(149, 184, 251, 0.2);
+  border-radius: 11px;
+  background: rgba(9, 16, 27, 0.72);
+  padding: 0.68rem 0.75rem;
+}
+
+.commitment-row.empty {
+  display: block;
+  text-align: center;
+  color: var(--muted);
+}
+
+.commitment-col {
+  display: grid;
+  align-content: center;
+  gap: 0.16rem;
+}
+
+.commitment-col.type {
+  font-weight: 700;
+  color: #dff0ff;
+}
+
+.commitment-col span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.commitment-col strong {
+  color: #e9f3ff;
+}
+
 .stat-box {
   border: 1px solid rgba(149, 184, 251, 0.2);
   border-radius: 12px;
@@ -738,6 +786,16 @@ button:hover {
 
   .card {
     padding: 0.78rem;
+  }
+
+  .commitment-row {
+    grid-template-columns: 1fr;
+    gap: 0.42rem;
+  }
+
+  .commitment-col.type {
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid rgba(149, 184, 251, 0.2);
   }
 
   #resultados .item {

@@ -66,6 +66,15 @@ function getMonthKeyInTimeZone(date = new Date(), timeZone = appTz) {
   return getDateInTimeZone(date, timeZone).slice(0, 7)
 }
 
+function toNumber(value) {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : 0
+}
+
+function roundMoney(value) {
+  return Math.round((toNumber(value) + Number.EPSILON) * 100) / 100
+}
+
 function mapSubscription(user) {
   return {
     status: user.subscription_status || "PENDING",
@@ -842,6 +851,110 @@ app.get(
   }
 )
 
+app.get(
+  "/api/calculations/commitment-reserve",
+  authMiddleware,
+  requireActiveSubscription,
+  async (req, res) => {
+    try {
+      const limit = 12
+      const rows = await all(
+        `
+        SELECT id, month_key, total_bruto, total_liquido, output_json, created_at
+        FROM salary_records
+        WHERE user_id = ?
+        ORDER BY month_key DESC, id DESC
+        LIMIT ?
+        `,
+        [req.user.sub, limit]
+      )
+
+      if (!rows.length) {
+        res.status(404).json({
+          error: "Nenhum cálculo encontrado para gerar a análise financeira.",
+        })
+        return
+      }
+
+      const discountAccumulator = new Map()
+      const latestDiscounts = new Map()
+      let totalBrutoAcumulado = 0
+      let totalLiquidoAcumulado = 0
+
+      rows.forEach((row) => {
+        const parsed = JSON.parse(row.output_json || "{}")
+        const totalBruto = toNumber(row.total_bruto ?? parsed?.totals?.totalBruto)
+        const totalLiquido = toNumber(row.total_liquido ?? parsed?.totals?.totalLiquido)
+        totalBrutoAcumulado += totalBruto
+        totalLiquidoAcumulado += totalLiquido
+
+        const discounts = Array.isArray(parsed?.discountItems) ? parsed.discountItems : []
+        discounts.forEach((item) => {
+          const label = String(item?.label || "Desconto não identificado")
+          const value = toNumber(item?.value)
+
+          // Usa o primeiro registro (mais recente) como referência mensal atual.
+          if (!latestDiscounts.has(label)) {
+            latestDiscounts.set(label, value)
+          }
+
+          discountAccumulator.set(label, toNumber(discountAccumulator.get(label)) + value)
+        })
+      })
+
+      const mesesConsiderados = rows.length
+      const mediaMensalBruta = mesesConsiderados > 0 ? totalBrutoAcumulado / mesesConsiderados : 0
+      const mediaMensalLiquida =
+        mesesConsiderados > 0 ? totalLiquidoAcumulado / mesesConsiderados : 0
+
+      const descontos = Array.from(discountAccumulator.entries())
+        .map(([label, valorAcumuladoHistorico]) => {
+          const valorMensalAtual = toNumber(latestDiscounts.get(label))
+          const valorAcumuladoAnualProjetado = valorMensalAtual * 12
+          const valorMensalMedio =
+            mesesConsiderados > 0 ? valorAcumuladoHistorico / mesesConsiderados : 0
+          const percentualDaRendaMensal =
+            mediaMensalBruta > 0 ? (valorMensalMedio / mediaMensalBruta) * 100 : 0
+
+          return {
+            tipo: label,
+            valorAcumuladoAnual: roundMoney(valorAcumuladoAnualProjetado),
+            percentualDaRendaMensal: roundMoney(percentualDaRendaMensal),
+          }
+        })
+        .sort((a, b) => b.valorAcumuladoAnual - a.valorAcumuladoAnual)
+
+      const sugestaoReservaMensal = roundMoney(mediaMensalLiquida * 0.1)
+      const taxaMensal = 0.01
+      const mesesSimulacao = 12
+      const fatorAcumulacao = (Math.pow(1 + taxaMensal, mesesSimulacao) - 1) / taxaMensal
+      const totalAcumulado12Meses = roundMoney(sugestaoReservaMensal * fatorAcumulacao)
+
+      const referencia = rows[0]
+      res.json({
+        referencia: {
+          monthKey: referencia.month_key,
+          createdAt: referencia.created_at,
+          mesesConsiderados,
+        },
+        analiseDescontos: descontos,
+        resumoRenda: {
+          mediaMensalBruta: roundMoney(mediaMensalBruta),
+          mediaMensalLiquida: roundMoney(mediaMensalLiquida),
+        },
+        reservaFinanceira: {
+          percentualAplicado: 10,
+          rendimentoMensalPercentual: 1,
+          sugestaoMensal: sugestaoReservaMensal,
+          totalAcumulado12Meses,
+        },
+      })
+    } catch (_error) {
+      res.status(500).json({ error: "Erro ao carregar comprometimento e reserva financeira." })
+    }
+  }
+)
+
 app.get("/admin", (req, res) => {
   const adminContext = getAdminContextFromRequest(req)
   if (!adminContext) {
@@ -877,6 +990,10 @@ app.get("/app/conta", (_req, res) => {
 
 app.get("/app/informacoes-calculo", (_req, res) => {
   res.sendFile(path.join(__dirname, "calculation-info.html"))
+})
+
+app.get("/app/comprometimento-reserva", (_req, res) => {
+  res.sendFile(path.join(__dirname, "commitment-reserve.html"))
 })
 
 app.get("*", (_req, res) => {
