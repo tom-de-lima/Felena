@@ -104,6 +104,7 @@
       "/app/conta": "conta",
       "/app/informacoes-calculo": "info-calculo",
       "/app/comprometimento-reserva": "comprometimento-reserva",
+      "/app/ajuda": "ajuda",
     }
 
     const targetKey = routeToTarget[currentRoute] || "login"

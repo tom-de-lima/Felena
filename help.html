@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GranaCheck - Histórico</title>
+    <title>GranaCheck - Ajuda</title>
     <link rel="stylesheet" href="/style2.css" />
   </head>
   <body>
@@ -19,10 +19,10 @@
         <nav class="rail-nav">
           <button type="button" class="rail-item" data-nav="login" data-route="/app/login">Login</button>
           <button type="button" class="rail-item" data-nav="entradas" data-route="/app/entradas">Entradas Financeiras</button>
-          <button type="button" class="rail-item active" data-nav="historico" data-route="/app/historico">Histórico</button>
+          <button type="button" class="rail-item" data-nav="historico" data-route="/app/historico">Histórico</button>
           <button type="button" class="rail-item" data-nav="info-calculo" data-route="/app/informacoes-calculo">Informações Úteis de Cálculo</button>
           <button type="button" class="rail-item" data-nav="comprometimento-reserva" data-route="/app/comprometimento-reserva">Comprometimento e Reserva</button>
-          <button type="button" class="rail-item" data-nav="ajuda" data-route="/app/ajuda">Ajuda</button>
+          <button type="button" class="rail-item active" data-nav="ajuda" data-route="/app/ajuda">Ajuda</button>
           <button type="button" class="rail-item" data-nav="conta" data-route="/app/conta">Conta</button>
         </nav>
         <div class="rail-footer">Versão estável</div>
@@ -32,8 +32,8 @@
         <header class="app-topbar">
           <div class="brand">
             <div>
-              <h1>Histórico Mensal</h1>
-              <p>Registros de valores calculados e armazenados</p>
+              <h1>Ajuda - Como usar o app</h1>
+              <p>Guia prático com explicações dos campos, resultados e regras de cálculo</p>
             </div>
           </div>
           <div id="user-badge" class="user-badge hidden">
@@ -46,18 +46,21 @@
 
         <div class="content-grid single-page">
           <section class="card info-card">
-            <h2>Resumo do histórico</h2>
-            <p id="history-summary-text">Carregando dados...</p>
+            <h2>Visão geral</h2>
+            <p id="help-overview-text">Carregando informações...</p>
+            <p id="help-impact-text" class="help-muted"></p>
+            <p id="help-last-example" class="help-muted"></p>
           </section>
 
-          <section id="history-card" class="card">
-            <h2>Históricos mensais</h2>
-            <ul id="history-list" class="history-list"></ul>
+          <section class="card">
+            <h2>Perguntas frequentes (FAQ)</h2>
+            <div id="help-faq-list" class="faq-list"></div>
           </section>
         </div>
       </main>
     </div>
+
     <script src="/app-common.js" defer></script>
-    <script src="/history-page.js" defer></script>
+    <script src="/help-page.js" defer></script>
   </body>
 </html>

@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { run, get, all, initDb } = require("./db")
-const { calculateCompensation } = require("./calculator")
+const { calculateCompensation, FUNCTION_BONUS_OPTIONS } = require("./calculator")
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -955,6 +955,157 @@ app.get(
   }
 )
 
+app.get("/api/help/guide", authMiddleware, requireActiveSubscription, async (req, res) => {
+  try {
+    const latest = await get(
+      `
+      SELECT month_key, output_json, created_at
+      FROM salary_records
+      WHERE user_id = ?
+      ORDER BY month_key DESC, id DESC
+      LIMIT 1
+      `,
+      [req.user.sub]
+    )
+
+    let latestSnapshot = null
+    if (latest?.output_json) {
+      const parsed = JSON.parse(latest.output_json)
+      latestSnapshot = {
+        monthKey: latest.month_key,
+        createdAt: latest.created_at,
+        totalBruto: roundMoney(parsed?.totals?.totalBruto),
+        totalLiquido: roundMoney(parsed?.totals?.totalLiquido),
+        baseCalculoIR: roundMoney(parsed?.totals?.baseCalculoIRNova ?? parsed?.totals?.baseCalculoIR),
+        descontos: Array.isArray(parsed?.discountItems)
+          ? parsed.discountItems.map((item) => ({
+              tipo: item.label,
+              valor: roundMoney(item.value),
+            }))
+          : [],
+      }
+    }
+
+    const gratificacoesFuncao = Object.values(FUNCTION_BONUS_OPTIONS).map((item) => ({
+      nome: item.label,
+      percentual: roundMoney(toNumber(item.rate) * 100),
+      baseReferencia: "BASE_INICIAL",
+    }))
+
+    res.json({
+      app: {
+        objetivo:
+          "Organizar as entradas financeiras mensais do servidor, calcular remuneração com regras de proventos e descontos e armazenar histórico mensal para consulta.",
+        impactoDosDados:
+          "Cada campo informado altera diretamente os proventos, os descontos e as bases tributárias. O resultado final depende dos valores inseridos pelo usuário em cada mês.",
+      },
+      regras: {
+        impostoRenda: {
+          isencaoAte: 5000,
+          faixaIntermediariaAte: 7350,
+          formulaDescontoIntermediaria:
+            "978,62 - (0,133145 * (totalBruto - (auxAlimentacao + valorEspecializacao + pensaoAlimenticia)))",
+          observacaoFaixaAlta:
+            "Acima de R$ 7.350,00, aplica-se apenas a regra antiga de IR sobre a base de cálculo antiga.",
+        },
+        comprometimento: {
+          acumuladoAnual: "valor mensal atual * 12",
+          percentualRendaMensal:
+            "desconto mensal médio / renda mensal bruta média * 100",
+        },
+        reserva: {
+          percentualSugestao: 10,
+          rendimentoMensalPercentual: 1,
+          periodoMeses: 12,
+        },
+        gratificacoesFuncao,
+      },
+      camposEntrada: [
+        {
+          campo: "Salário Base Atual",
+          significado: "Valor principal da remuneração mensal.",
+          preenchimento: "Informe em reais, usando formato numérico (ex.: 3000,00).",
+          impacto: "Serve de base para adicionais, previdência, sindicato e parte dos cálculos de proventos.",
+        },
+        {
+          campo: "Quantidade de Plantões",
+          significado: "Define a escala usada para calcular adicionais da jornada.",
+          preenchimento: "Selecione 7 ou 8 plantões.",
+          impacto: "Altera horas noturnas, horas excedentes e quantidade de auxílios-alimentação.",
+        },
+        {
+          campo: "Escolaridade",
+          significado: "Nível de formação do usuário.",
+          preenchimento: "Selecione o nível correspondente.",
+          impacto: "Afeta o reajuste aplicado na base e, consequentemente, todo o cálculo.",
+        },
+        {
+          campo: "Quinquênios",
+          significado: "Quantidade de adicionais por tempo de serviço.",
+          preenchimento: "Informe número inteiro (0 ou maior).",
+          impacto: "Aumenta proventos e também influencia descontos vinculados à base.",
+        },
+        {
+          campo: "Especialização",
+          significado: "Percentual de especialização (15% ou 25%).",
+          preenchimento: "Selecione o percentual aplicável.",
+          impacto: "Entra como provento e compõe dedução específica usada na base de IR nova.",
+        },
+        {
+          campo: "Gratificação por Função",
+          significado: "Adicionais por função exercida, cumulativos.",
+          preenchimento: "Marque uma ou mais funções aplicáveis.",
+          impacto: "Soma proventos e também compõe a base da especialização.",
+        },
+        {
+          campo: "Pensão Alimentícia",
+          significado: "Desconto judicial ou voluntário de pensão.",
+          preenchimento: "Marque se possui pensão e informe o valor em reais.",
+          impacto: "É desconto direto e também dedução da base de IR.",
+        },
+        {
+          campo: "Dependentes (IR)",
+          significado: "Quantidade de dependentes com dedução no IR.",
+          preenchimento: "Informe número inteiro.",
+          impacto: "Reduz a base de cálculo antiga do imposto de renda.",
+        },
+      ],
+      resultados: [
+        {
+          nome: "Total Bruto",
+          explicacao: "Soma de todos os proventos do mês antes dos descontos.",
+        },
+        {
+          nome: "Total Líquido",
+          explicacao: "Valor final após subtrair todos os descontos do total bruto.",
+        },
+        {
+          nome: "Descontos",
+          explicacao: "Itens como previdência, IR, sindicato, pensão e descontos individuais.",
+        },
+        {
+          nome: "Base de Cálculo de IR",
+          explicacao:
+            "Base usada para enquadrar a regra de IR vigente (isenção, faixa intermediária com ajuste ou faixa superior).",
+        },
+        {
+          nome: "Comprometimento de Renda",
+          explicacao:
+            "Mostra quanto cada desconto pesa na renda mensal e projeta acumulado anual com base no valor mensal atual.",
+        },
+        {
+          nome: "Reserva Sugerida",
+          explicacao:
+            "Sugere guardar 10% da renda líquida média mensal e simula acumulação por 12 meses com juros compostos de 1% ao mês.",
+        },
+      ],
+      exemploUltimoCalculo: latestSnapshot,
+    })
+  } catch (_error) {
+    res.status(500).json({ error: "Erro ao carregar guia de ajuda." })
+  }
+})
+
 app.get("/admin", (req, res) => {
   const adminContext = getAdminContextFromRequest(req)
   if (!adminContext) {
@@ -994,6 +1145,10 @@ app.get("/app/informacoes-calculo", (_req, res) => {
 
 app.get("/app/comprometimento-reserva", (_req, res) => {
   res.sendFile(path.join(__dirname, "commitment-reserve.html"))
+})
+
+app.get("/app/ajuda", (_req, res) => {
+  res.sendFile(path.join(__dirname, "help.html"))
 })
 
 app.get("*", (_req, res) => {

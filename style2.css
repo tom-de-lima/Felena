@@ -596,6 +596,62 @@ button:hover {
   color: #e9f3ff;
 }
 
+.help-muted {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+}
+
+.faq-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.faq-item {
+  border: 1px solid rgba(149, 184, 251, 0.22);
+  border-radius: 11px;
+  background: rgba(9, 16, 27, 0.72);
+  overflow: hidden;
+}
+
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.7rem 0.8rem;
+  font-weight: 700;
+  color: #ddedff;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item[open] summary {
+  border-bottom: 1px solid rgba(149, 184, 251, 0.2);
+  background: rgba(16, 28, 45, 0.78);
+}
+
+.faq-answer {
+  padding: 0.7rem 0.8rem;
+  color: #d7e8ff;
+  line-height: 1.45;
+}
+
+.faq-answer hr {
+  border: 0;
+  border-top: 1px solid rgba(149, 184, 251, 0.22);
+  margin: 0.58rem 0;
+}
+
+.faq-answer code {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.82rem;
+  color: #d8ffe5;
+  background: rgba(32, 62, 40, 0.45);
+  border: 1px solid rgba(88, 200, 119, 0.4);
+  border-radius: 8px;
+  padding: 0.06rem 0.35rem;
+}
+
 .stat-box {
   border: 1px solid rgba(149, 184, 251, 0.2);
   border-radius: 12px;
