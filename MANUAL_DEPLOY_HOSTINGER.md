@@ -360,7 +360,7 @@ Quando houver correção de código local (ex.: lógica de cálculo de IR), usar
 ```powershell
 cd "C:\Users\anton\OneDrive\Trade\Apps\Felena\Estável\Felena"
 git status
-git add calculator.js
+git add ARQUIVO1.js, ARQUIVO2.js
 git commit -m "fix(ir): aplica nova base e desconto conforme regra atualizada"
 git pull --rebase origin main
 git push origin main
