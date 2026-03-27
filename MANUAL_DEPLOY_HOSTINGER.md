@@ -350,3 +350,38 @@ cp /opt/granacheck/app/data/granacheck.db /opt/granacheck/app/data/granacheck-$(
   - processo PM2 nomeado (`granacheck`)
   - bloco Nginx específico (`granacheck`)
 - Em comandos com `sudo`, usar a senha do usuário atual (`granacheck`) ou operar como root.
+
+## 19. Publicar correção (commit/push + VPS)
+
+Quando houver correção de código local (ex.: lógica de cálculo de IR), usar este fluxo:
+
+### 19.1 No computador local (commit e push)
+
+```powershell
+cd "C:\Users\anton\OneDrive\Trade\Apps\Felena\Estável\Felena"
+git status
+git add calculator.js
+git commit -m "fix(ir): aplica nova base e desconto conforme regra atualizada"
+git pull --rebase origin main
+git push origin main
+git rev-parse --short HEAD
+```
+
+### 19.2 Na VPS (publicar em produção)
+
+```bash
+sudo su - granacheck
+cd /opt/granacheck/app
+git pull
+npm ci
+pm2 restart granacheck --update-env
+pm2 save
+pm2 status
+curl -i http://127.0.0.1:3000/health
+```
+
+Se o `.env` da VPS estiver com `PORT=3010`, validar com:
+
+```bash
+curl -i http://127.0.0.1:3010/health
+```
