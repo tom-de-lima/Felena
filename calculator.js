@@ -145,9 +145,9 @@ function getIncomeTaxRuleLabel(baseCalculoIRNova) {
     return "Isenção até R$ 5.000,00"
   }
   if (baseCalculoIRNova <= 7350) {
-    return "Faixa intermediária (R$ 5.000,01 a R$ 7.349,99) com ajuste complementar"
+    return "Faixa intermediária (R$ 5.000,01 a R$ 7.350,00) com ajuste complementar"
   }
-  return "Faixa superior (>= R$ 7.350,00) sem desconto complementar"
+  return "Faixa superior (> R$ 7.350,00) sem desconto complementar"
 }
 
 function validateCalculation(calculation) {
