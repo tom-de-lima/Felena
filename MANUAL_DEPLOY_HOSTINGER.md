@@ -385,3 +385,87 @@ Se o `.env` da VPS estiver com `PORT=3010`, validar com:
 ```bash
 curl -i http://127.0.0.1:3010/health
 ```
+
+## 20. Incidente real: 502 após limpeza de dependências (mar/2026)
+
+### 20.1 Cenário que causou a falha
+
+- Aplicação caiu com `502 Bad Gateway`.
+- Processo PM2 alternava entre `errored` e `online`.
+- `npm ci` falhou porque o `package-lock.json` tinha sido removido.
+- O Nginx estava correto em `3000`, mas a app não estava estável no upstream.
+
+### 20.2 Assinaturas do erro observadas
+
+1. PM2 com processo em erro:
+
+```bash
+pm2 status
+```
+
+2. Health local sem resposta:
+
+```bash
+curl -i http://127.0.0.1:3000/health
+```
+
+3. Falha de instalação por lockfile ausente:
+
+```bash
+npm ci
+```
+
+Erro típico:
+
+`The npm ci command can only install with an existing package-lock.json...`
+
+### 20.3 Procedimento de recuperação aplicado
+
+```bash
+cd /opt/granacheck/app
+git status
+git restore .
+git pull
+npm install
+pm2 delete granacheck || true
+pm2 start server.js --name granacheck --update-env
+pm2 save
+```
+
+### 20.4 Ajuste e validação do Nginx
+
+```bash
+grep -n "proxy_pass" /etc/nginx/sites-available/granacheck
+sudo sed -i 's/127.0.0.1:3010/127.0.0.1:3000/g' /etc/nginx/sites-available/granacheck
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 20.5 Confirmação final de sucesso
+
+1. Teste externo (decisivo):
+
+```bash
+curl -I https://orqtech.tech/app/login
+```
+
+Resposta esperada:
+
+`HTTP/1.1 200 OK`
+
+2. Teste local da app:
+
+```bash
+curl -i http://127.0.0.1:3000/health
+```
+
+Resposta esperada:
+
+```json
+{"ok":true}
+```
+
+### 20.6 Nota importante sobre senha do sudo
+
+- Ao executar comandos com `sudo`, a senha digitada nao aparece na tela (comportamento normal).
+- Se digitar errado, o terminal exibira `Sorry, try again.` e pedira a senha novamente.
