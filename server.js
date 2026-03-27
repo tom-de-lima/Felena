@@ -1023,7 +1023,8 @@ app.get("/api/help/guide", authMiddleware, requireActiveSubscription, async (req
       camposEntrada: [
         {
           campo: "Salário Base Atual",
-          significado: "Valor principal da remuneração mensal.",
+          significado:
+            "Valor principal da remuneração. É o valor do seu base atual conforme sua faixa e nível na carreira, sendo completamente diferente do base inicial, que é outro valor. Cada usuário servidor da GCM deve saber seu base atual para que os cálculos sejam realizados corretamente. Caso você digite um valor incompatível com sua progressão, o resultado será completamente diferente do esperado.",
           preenchimento: "Informe em reais, usando formato numérico (ex.: 3000,00).",
           impacto: "Serve de base para adicionais, previdência, sindicato e parte dos cálculos de proventos.",
         },
