@@ -1,175 +1,143 @@
-# Manual de Deploy - GranaCheck (Hostinger VPS + Ubuntu 24.04)
+# Manual Universal de Deploy em VPS (Hostinger/Ubuntu)
 
-Este documento registra, de forma completa, o procedimento utilizado para publicar o app **GranaCheck** em produção na VPS da Hostinger, com domínio `orqtech.tech`, acesso via Termius e execução isolada.
+Este documento é um playbook reutilizável para deploy de **qualquer aplicação** em VPS Linux.  
+Use os placeholders entre `<...>` e adapte ao projeto.
 
-## 1. Contexto do ambiente
+## 1. Variáveis padrão (preencher antes de executar)
 
-- VPS: Hostinger
-- SO: Ubuntu 24.04 LTS
-- Domínio: `orqtech.tech`
-- Aplicação: Node.js + Express
-- Processo: PM2
-- Proxy reverso: Nginx
-- SSL: Let's Encrypt (Certbot)
-- Acesso remoto: Termius (SSH)
+- `<APP_NAME>`: nome da aplicação (ex.: `meuapp`)
+- `<APP_USER>`: usuário do sistema que executa a app (ex.: `meuapp`)
+- `<APP_DIR>`: pasta da app (ex.: `/opt/meuapp/app`)
+- `<DOMAIN>`: domínio principal (ex.: `exemplo.com`)
+- `<REPO_URL>`: URL do GitHub/Git (ex.: `https://github.com/usuario/repo.git`)
+- `<APP_PORT>`: porta interna da aplicação (ex.: `3000`)
 
-## 2. Objetivo da publicação
+Exemplo prático preenchido:
 
-- Rodar o app de forma estável e persistente.
-- Isolar a aplicação de outros serviços.
-- Expor por domínio com HTTPS.
-- Garantir reinício automático após reboot.
-
-## 3. Acesso inicial na VPS
-
-Conexão via SSH:
-
-```bash
-ssh root@IP_DA_VPS
+```text
+APP_NAME=granacheck
+APP_USER=granacheck
+APP_DIR=/opt/granacheck/app
+DOMAIN=orqtech.tech
+REPO_URL=https://github.com/tom-de-lima/Felena.git
+APP_PORT=3000
 ```
 
-Atualização de pacotes:
+## 2. Provisionamento base da VPS
 
 ```bash
+ssh root@<VPS_IP>
 apt update && apt upgrade -y
-```
-
-Instalação de dependências base:
-
-```bash
 apt install -y git curl nginx ufw certbot python3-certbot-nginx
 ```
 
-## 4. Criação de usuário isolado da aplicação
-
-Usuário dedicado:
+## 3. Usuário e diretório isolados por aplicação
 
 ```bash
-adduser granacheck
-usermod -aG sudo granacheck
+adduser <APP_USER>
+usermod -aG sudo <APP_USER>
+mkdir -p /opt/<APP_NAME>
+chown -R <APP_USER>:<APP_USER> /opt/<APP_NAME>
 ```
 
-## 5. Instalação do Node.js e PM2
+## 4. Clonar projeto
 
-Node 20:
+```bash
+su - <APP_USER>
+git clone <REPO_URL> <APP_DIR>
+cd <APP_DIR>
+```
+
+## 5. Estratégias por stack (escolha uma)
+
+### 5.1 Node.js + PM2
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs
-```
-
-PM2 global:
-
-```bash
 npm install -g pm2
+
+cd <APP_DIR>
+npm install
 ```
 
-Validação:
+### 5.2 Docker + Docker Compose
 
 ```bash
-node -v
-npm -v
-pm2 -v
+apt install -y docker.io docker-compose-plugin
+systemctl enable docker
+systemctl start docker
+usermod -aG docker <APP_USER>
 ```
 
-## 6. Estrutura isolada do projeto
+## 6. Configuração de ambiente
 
-Criação de diretório de app:
+Crie/edite `.env` conforme o projeto:
 
 ```bash
-mkdir -p /opt/granacheck
-chown -R granacheck:granacheck /opt/granacheck
+nano <APP_DIR>/.env
 ```
 
-Troca para o usuário da app:
-
-```bash
-su - granacheck
-```
-
-Clone do repositório:
-
-```bash
-git clone https://github.com/SEU_USUARIO/SEU_REPO.git /opt/granacheck/app
-cd /opt/granacheck/app
-npm ci
-```
-
-## 7. Configuração de ambiente (`.env`)
-
-Arquivo:
-
-```bash
-nano /opt/granacheck/app/.env
-```
-
-Exemplo utilizado:
+Exemplo mínimo:
 
 ```env
-PORT=3000
-APP_BASE_URL=https://orqtech.tech
+PORT=<APP_PORT>
+APP_BASE_URL=https://<DOMAIN>
 APP_TIMEZONE=America/Fortaleza
-JWT_SECRET=SEU_SEGREDO_FORTE_1
-ADMIN_JWT_SECRET=SEU_SEGREDO_FORTE_2
-PIX_KEY=SUA_CHAVE_PIX
-MASTER_ADMIN_NAME=Administrador Master
-MASTER_ADMIN_EMAIL=master@granacheck.local
-MASTER_ADMIN_PASSWORD=Master@123456
 ```
 
-## 8. Teste local da aplicação na VPS
+## 7. Publicação da aplicação
 
-Execução manual:
+### 7.1 Node + PM2
 
 ```bash
-cd /opt/granacheck/app
-node server.js
-```
-
-Teste de saúde:
-
-```bash
-curl -i http://127.0.0.1:3000/health
-```
-
-Resposta esperada:
-
-```json
-{"ok":true}
-```
-
-## 9. Subida com PM2 (produção)
-
-Iniciar app:
-
-```bash
-cd /opt/granacheck/app
-pm2 start server.js --name granacheck
+cd <APP_DIR>
+pm2 start server.js --name <APP_NAME> --update-env
 pm2 save
-```
-
-Habilitar auto-start no boot:
-
-```bash
 pm2 startup
 ```
 
-Executar o comando adicional que o PM2 imprimir (normalmente com `sudo`), depois:
+### 7.2 Docker Compose
 
 ```bash
-pm2 save
-pm2 status
+cd <APP_DIR>
+docker compose up -d --build
+docker ps
 ```
 
-## 10. Configuração do Nginx
-
-Arquivo de site:
+## 8. Nginx (proxy reverso)
 
 ```bash
-sudo nano /etc/nginx/sites-available/granacheck
+sudo nano /etc/nginx/sites-available/<APP_NAME>
 ```
 
-Configuração:
+Template:
+
+```nginx
+server {
+    listen 80;
+    server_name <DOMAIN> www.<DOMAIN>;
+
+    location / {
+        proxy_pass http://127.0.0.1:<APP_PORT>;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+Ativar:
+
+```bash
+sudo ln -sf /etc/nginx/sites-available/<APP_NAME> /etc/nginx/sites-enabled/<APP_NAME>
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Exemplo prático preenchido:
 
 ```nginx
 server {
@@ -187,30 +155,13 @@ server {
 }
 ```
 
-Ativação:
+## 9. SSL com Certbot
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/granacheck /etc/nginx/sites-enabled/granacheck
-sudo nginx -t
-sudo systemctl reload nginx
+sudo certbot --nginx -d <DOMAIN> -d www.<DOMAIN>
 ```
 
-## 11. DNS do domínio na Hostinger
-
-Entradas configuradas no painel DNS:
-
-- `A` para `@` -> `IP_DA_VPS`
-- `A` para `www` -> `IP_DA_VPS`
-
-## 12. SSL (HTTPS) com Certbot
-
-```bash
-sudo certbot --nginx -d orqtech.tech -d www.orqtech.tech
-```
-
-Durante o wizard, selecionar redirecionamento HTTP -> HTTPS.
-
-## 13. Firewall
+## 10. Firewall
 
 ```bash
 sudo ufw allow OpenSSH
@@ -219,253 +170,232 @@ sudo ufw enable
 sudo ufw status
 ```
 
-## 14. Erro encontrado e resolução (502 Bad Gateway)
+## 11. Fluxo padrão de atualização (qualquer projeto)
 
-### Sintoma
-
-Ao acessar `https://orqtech.tech`, apareceu:
-
-`502 Bad Gateway (nginx/1.24.0)`
-
-### Diagnóstico realizado
-
-1. Verificação de saúde da app:
-
-```bash
-curl -i http://127.0.0.1:3000/health
-```
-
-Retorno: `200` com `{"ok":true}`.
-
-2. Verificação dos logs do Nginx:
-
-```bash
-sudo tail -n 80 /var/log/nginx/error.log
-```
-
-Foi identificado upstream recusado em `127.0.0.1:3010` (`connect() failed (111: Connection refused)`), indicando incompatibilidade de porta.
-
-3. Checagem do `proxy_pass` efetivo:
-
-```bash
-grep -R "proxy_pass" /etc/nginx/sites-available/granacheck
-```
-
-4. Ajuste definitivo para alinhar com a porta da app (`3000`) e recarregar Nginx:
-
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-### Validação após correção
-
-```bash
-curl -i http://127.0.0.1:3000/health
-curl -I https://orqtech.tech
-```
-
-Resultado final: aplicação operacional, com redirecionamento correto para `/app/login`.
-
-## 15. Verificações finais de produção
-
-```bash
-pm2 status
-pm2 logs granacheck --lines 80
-curl -i http://127.0.0.1:3000/health
-curl -I https://orqtech.tech
-```
-
-Checklist:
-
-- App responde em `/health`.
-- PM2 mostra processo `online`.
-- Domínio abre via HTTPS.
-- Login, cálculos, histórico e área admin funcionando.
-
-## 16. Rotina de atualização (deploy de novas versões)
-
-Como usuário `granacheck`:
-
-```bash
-cd /opt/granacheck/app
-git pull
-npm ci
-pm2 restart granacheck
-pm2 save
-```
-
-Validação:
-
-```bash
-pm2 status
-curl -i http://127.0.0.1:3000/health
-```
-
-## 16.1 Atualização manual na VPS após alteração no GitHub
-
-Sempre que houver alterações no repositório GitHub e você quiser atualizar manualmente a produção, execute:
-
-```bash
-sudo su - granacheck
-cd /opt/granacheck/app
-git pull
-npm ci
-pm2 restart granacheck
-pm2 save
-pm2 status
-curl -i http://127.0.0.1:3000/health
-```
-
-Se quiser validar o commit publicado:
-
-```bash
-cd /opt/granacheck/app
-git log -1 --oneline
-```
-
-Se houver migração de dependências ou mudança crítica, consulte logs após restart:
-
-```bash
-pm2 logs granacheck --lines 100
-```
-
-## 17. Backup recomendado (SQLite)
-
-Banco local em:
-
-`/opt/granacheck/app/data/granacheck.db`
-
-Backup manual:
-
-```bash
-cp /opt/granacheck/app/data/granacheck.db /opt/granacheck/app/data/granacheck-$(date +%F).db.bak
-```
-
-## 18. Observações importantes
-
-- O app está isolado por:
-  - usuário dedicado (`granacheck`)
-  - diretório dedicado (`/opt/granacheck/app`)
-  - processo PM2 nomeado (`granacheck`)
-  - bloco Nginx específico (`granacheck`)
-- Em comandos com `sudo`, usar a senha do usuário atual (`granacheck`) ou operar como root.
-
-## 19. Publicar correção (commit/push + VPS)
-
-Quando houver correção de código local (ex.: lógica de cálculo de IR), usar este fluxo:
-
-### 19.1 No computador local (commit e push)
+### 11.1 Local (commit/push)
 
 ```powershell
-cd "C:\Users\anton\OneDrive\Trade\Apps\Felena\Estável\Felena"
+cd "C:\CAMINHO\DO\REPOSITORIO"
 git status
-git add ARQUIVO1.js, ARQUIVO2.js
-git commit -m "fix(ir): aplica nova base e desconto conforme regra atualizada"
+git add .
+git commit -m "tipo(escopo): resumo da alteração"
 git pull --rebase origin main
 git push origin main
 git rev-parse --short HEAD
 ```
 
-### 19.2 Na VPS (publicar em produção)
+Exemplo prático preenchido:
+
+```powershell
+cd "C:\Users\anton\OneDrive\Trade\Apps\Felena\Estável\Felena"
+git status
+git add .
+git commit -m "feat(help): atualiza FAQ e documentação"
+git pull --rebase origin main
+git push origin main
+git rev-parse --short HEAD
+```
+
+### 11.2 VPS (deploy)
+
+```bash
+sudo su - <APP_USER>
+cd <APP_DIR>
+git fetch origin
+git pull origin main
+git rev-parse --short HEAD
+git log -1 --oneline
+```
+
+Exemplo prático preenchido:
 
 ```bash
 sudo su - granacheck
 cd /opt/granacheck/app
-git pull
-npm ci
+git fetch origin
+git pull origin main
+git rev-parse --short HEAD
+git log -1 --oneline
+```
+
+#### Se Node + PM2
+
+```bash
+npm install
+pm2 restart <APP_NAME> --update-env
+pm2 save
+pm2 status
+```
+
+Exemplo prático preenchido:
+
+```bash
+npm install
 pm2 restart granacheck --update-env
 pm2 save
 pm2 status
+```
+
+#### Se Docker Compose
+
+```bash
+docker compose pull
+docker compose up -d --build
+docker ps
+```
+
+Exemplo prático preenchido:
+
+```bash
+docker compose pull
+docker compose up -d --build
+docker ps
+```
+
+## 12. Verificação pós-deploy
+
+```bash
+curl -i http://127.0.0.1:<APP_PORT>/health
+curl -I https://<DOMAIN>
+```
+
+Exemplo prático preenchido:
+
+```bash
 curl -i http://127.0.0.1:3000/health
-```
-
-Se o `.env` da VPS estiver com `PORT=3010`, validar com:
-
-```bash
-curl -i http://127.0.0.1:3010/health
-```
-
-## 20. Incidente real: 502 após limpeza de dependências (mar/2026)
-
-### 20.1 Cenário que causou a falha
-
-- Aplicação caiu com `502 Bad Gateway`.
-- Processo PM2 alternava entre `errored` e `online`.
-- `npm ci` falhou porque o `package-lock.json` tinha sido removido.
-- O Nginx estava correto em `3000`, mas a app não estava estável no upstream.
-
-### 20.2 Assinaturas do erro observadas
-
-1. PM2 com processo em erro:
-
-```bash
-pm2 status
-```
-
-2. Health local sem resposta:
-
-```bash
-curl -i http://127.0.0.1:3000/health
-```
-
-3. Falha de instalação por lockfile ausente:
-
-```bash
-npm ci
-```
-
-Erro típico:
-
-`The npm ci command can only install with an existing package-lock.json...`
-
-### 20.3 Procedimento de recuperação aplicado
-
-```bash
-cd /opt/granacheck/app
-git status
-git restore .
-git pull
-npm install
-pm2 delete granacheck || true
-pm2 start server.js --name granacheck --update-env
-pm2 save
-```
-
-### 20.4 Ajuste e validação do Nginx
-
-```bash
-grep -n "proxy_pass" /etc/nginx/sites-available/granacheck
-sudo sed -i 's/127.0.0.1:3010/127.0.0.1:3000/g' /etc/nginx/sites-available/granacheck
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-### 20.5 Confirmação final de sucesso
-
-1. Teste externo (decisivo):
-
-```bash
 curl -I https://orqtech.tech/app/login
 ```
 
-Resposta esperada:
+## 13. Troubleshooting rápido
 
-`HTTP/1.1 200 OK`
-
-2. Teste local da app:
+### 13.1 502 Bad Gateway
 
 ```bash
-curl -i http://127.0.0.1:3000/health
+sudo tail -n 120 /var/log/nginx/error.log
+grep -n "proxy_pass" /etc/nginx/sites-available/<APP_NAME>
 ```
 
-Resposta esperada:
+Exemplo prático preenchido:
 
-```json
-{"ok":true}
+```bash
+sudo tail -n 120 /var/log/nginx/error.log
+grep -n "proxy_pass" /etc/nginx/sites-available/granacheck
 ```
 
-### 20.6 Nota importante sobre senha do sudo
+### 13.2 App não sobe
 
-- Ao executar comandos com `sudo`, a senha digitada nao aparece na tela (comportamento normal).
-- Se digitar errado, o terminal exibira `Sorry, try again.` e pedira a senha novamente.
+Node/PM2:
+
+```bash
+pm2 status
+pm2 logs <APP_NAME> --lines 120 --nostream
+```
+
+Docker:
+
+```bash
+docker ps -a
+docker compose logs --tail=120
+```
+
+Exemplo prático preenchido (Node + PM2):
+
+```bash
+pm2 status
+pm2 logs granacheck --lines 120 --nostream
+```
+
+### 13.3 Dependências quebradas (Node)
+
+```bash
+cd <APP_DIR>
+git restore .
+git pull origin main
+rm -rf node_modules
+npm install
+pm2 restart <APP_NAME> --update-env
+```
+
+Exemplo prático preenchido:
+
+```bash
+cd /opt/granacheck/app
+git restore .
+git pull origin main
+rm -rf node_modules
+npm install
+pm2 restart granacheck --update-env
+```
+
+## 14. Rollback rápido
+
+```bash
+cd <APP_DIR>
+git log -5 --oneline
+git checkout <COMMIT_ANTERIOR>
+```
+
+Exemplo prático preenchido:
+
+```bash
+cd /opt/granacheck/app
+git log -5 --oneline
+git checkout e70dbf7
+```
+
+Node:
+
+```bash
+npm install
+pm2 restart <APP_NAME> --update-env
+```
+
+Exemplo prático preenchido:
+
+```bash
+npm install
+pm2 restart granacheck --update-env
+```
+
+Docker:
+
+```bash
+docker compose up -d --build
+```
+
+## 15. Banco de dados (backup)
+
+SQLite:
+
+```bash
+cp <APP_DIR>/data/<DB_FILE>.db <APP_DIR>/data/<DB_FILE>-$(date +%F_%H%M).bak
+```
+
+Exemplo prático preenchido:
+
+```bash
+cp /opt/granacheck/app/data/granacheck.db /opt/granacheck/app/data/granacheck-$(date +%F_%H%M).bak
+```
+
+MySQL/PostgreSQL: usar `mysqldump` / `pg_dump` conforme stack.
+
+## 16. Isolamento (host vs container)
+
+```bash
+sudo docker ps
+pm2 status
+ps -ef | grep -E "node|python|java" | grep -v grep
+```
+
+Leitura:
+
+- Se existe processo no PM2 e `docker ps` vazio: execução no host.
+- Se há container ativo da app: execução containerizada.
+
+## 17. Boas práticas
+
+- Padronize `<APP_NAME>`, portas e paths por aplicação.
+- Não edite código direto em produção.
+- Faça backup antes de mudanças sensíveis.
+- Sempre valide `HEAD` local vs VPS.
+- Tenha rota de health check (`/health`) em todas as apps.
