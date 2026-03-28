@@ -6,7 +6,6 @@ services:
     build:
       context: "."
       dockerfile: "Dockerfile"
-    image: "granacheck:latest"
     restart: "always"
     ports:
       - "3001:3000"
