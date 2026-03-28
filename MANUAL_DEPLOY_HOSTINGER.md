@@ -456,6 +456,7 @@ chmod +x deploy.sh
 Executar deploy:
 
 ```bash
+sudo su - <USER_NAME>
 cd <APP_DIR>
 ./deploy.sh
 ```
@@ -476,6 +477,7 @@ gdeploy
 Exemplo prático preenchido:
 
 ```bash
+sudo su - granacheck
 cd /opt/granacheck/app
 ./deploy.sh
 ```
