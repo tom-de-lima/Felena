@@ -226,3 +226,60 @@ curl -i http://127.0.0.1:3001/health
 curl -I https://orqtech.tech/app/login
 sudo docker logs --tail 80 granacheck_app
 ```
+
+## 13. Acesso visual ao banco SQLite (Windows + túnel SSH)
+
+Objetivo: visualizar o banco de dados em interface web sem expor porta pública na internet.
+
+### 13.1 Subir viewer SQLite na VPS (somente leitura no volume)
+
+```bash
+sudo docker rm -f sqlite_web_ro 2>/dev/null || true
+sudo docker run -d --name sqlite_web_ro \
+  --restart unless-stopped \
+  -p 127.0.0.1:8088:8080 \
+  -v granacheck_sqlite_data:/data:ro \
+  coleifer/sqlite-web \
+  sqlite_web /data/granacheck.db --host 0.0.0.0 --port 8080
+```
+
+Validar na VPS:
+
+```bash
+sudo docker ps --filter name=sqlite_web_ro
+curl -I http://127.0.0.1:8088
+```
+
+### 13.2 Criar túnel SSH no Windows PowerShell
+
+No computador local (Windows):
+
+```powershell
+ssh -L 8088:127.0.0.1:8088 granacheck@187.77.49.157
+```
+
+Observação:
+- manter essa sessão SSH aberta enquanto usar a interface visual do banco.
+
+### 13.3 Acessar interface visual no navegador local
+
+No navegador do Windows:
+
+```text
+http://127.0.0.1:8088
+```
+
+### 13.4 Encerrar com segurança
+
+1. Fechar túnel SSH no PowerShell (`Ctrl + C`).
+2. Opcional: parar o viewer na VPS:
+
+```bash
+sudo docker stop sqlite_web_ro
+```
+
+Opcional remover:
+
+```bash
+sudo docker rm sqlite_web_ro
+```
