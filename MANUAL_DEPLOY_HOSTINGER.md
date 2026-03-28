@@ -399,3 +399,156 @@ Leitura:
 - Faça backup antes de mudanças sensíveis.
 - Sempre valide `HEAD` local vs VPS.
 - Tenha rota de health check (`/health`) em todas as apps.
+
+## 18. Deploy seguro automatizado (script padrão)
+
+Para reduzir erro operacional manual, use um script único de deploy na VPS.
+
+Criar script (como `<APP_USER>`):
+
+```bash
+cd <APP_DIR>
+cat > deploy.sh << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_DIR="<APP_DIR>"
+APP_NAME="<APP_NAME>"
+APP_PORT="<APP_PORT>"
+DOMAIN="<DOMAIN>"
+
+echo "[1/8] Entrando no diretório"
+cd "$APP_DIR"
+
+echo "[2/8] Atualizando código"
+git fetch origin
+git pull origin main
+
+echo "[3/8] Garantindo PORT=${APP_PORT} no .env"
+if grep -q '^PORT=' .env; then
+  sed -i "s/^PORT=.*/PORT=${APP_PORT}/" .env
+else
+  echo "PORT=${APP_PORT}" >> .env
+fi
+
+echo "[4/8] Instalando dependências"
+npm install
+
+echo "[5/8] Reiniciando processo"
+pm2 restart "$APP_NAME" --update-env || pm2 start server.js --name "$APP_NAME" --update-env
+pm2 save
+
+echo "[6/8] Validando PM2"
+pm2 status
+
+echo "[7/8] Health local"
+curl -fsS "http://127.0.0.1:${APP_PORT}/health"
+
+echo "[8/8] Health externo"
+curl -fsSI "https://${DOMAIN}" | head -n 1
+
+echo "Deploy concluído com sucesso."
+EOF
+
+chmod +x deploy.sh
+```
+
+Executar deploy:
+
+```bash
+cd <APP_DIR>
+./deploy.sh
+```
+
+Alias opcional:
+
+```bash
+echo "alias gdeploy='cd <APP_DIR> && ./deploy.sh'" >> ~/.bashrc
+source ~/.bashrc
+```
+
+Uso diário com alias:
+
+```bash
+gdeploy
+```
+
+Exemplo prático preenchido:
+
+```bash
+cd /opt/granacheck/app
+./deploy.sh
+```
+
+## 19. Prevenção de quedas e erro 502 (produção)
+
+O erro `502 Bad Gateway` acontece quando o Nginx está ativo, mas a aplicação não responde no upstream configurado.
+
+### 19.1 Checklist preventivo obrigatório
+
+```bash
+# 1) Porta da app e porta do Nginx devem ser a mesma
+grep -E '^PORT=' <APP_DIR>/.env
+grep -n "proxy_pass" /etc/nginx/sites-available/<APP_NAME>
+
+# 2) Processo da app deve estar online
+pm2 status
+
+# 3) Saúde local deve responder
+curl -i http://127.0.0.1:<APP_PORT>/health
+```
+
+### 19.2 Garantir PM2 no boot (evita queda após reboot)
+
+```bash
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u <APP_USER> --hp /home/<APP_USER>
+sudo su - <APP_USER> -c "pm2 save"
+```
+
+### 19.3 Watchdog de auto-recuperação (1 min)
+
+Crie script de health check:
+
+```bash
+sudo tee /usr/local/bin/<APP_NAME>-health.sh > /dev/null << 'EOF'
+#!/usr/bin/env bash
+if ! curl -fsS --max-time 5 http://127.0.0.1:<APP_PORT>/health > /dev/null; then
+  su - <APP_USER> -c "pm2 restart <APP_NAME> --update-env && pm2 save"
+fi
+EOF
+sudo chmod +x /usr/local/bin/<APP_NAME>-health.sh
+```
+
+Agende no cron (a cada minuto):
+
+```bash
+( crontab -l 2>/dev/null; echo "* * * * * /usr/local/bin/<APP_NAME>-health.sh >/dev/null 2>&1" ) | crontab -
+```
+
+### 19.4 Correção rápida quando 502 aparecer
+
+```bash
+pm2 status
+pm2 logs <APP_NAME> --lines 120 --nostream
+sudo tail -n 120 /var/log/nginx/error.log
+curl -i http://127.0.0.1:<APP_PORT>/health
+```
+
+Se houver divergência de porta:
+
+```bash
+sudo sed -i 's/127.0.0.1:3010/127.0.0.1:3000/g' /etc/nginx/sites-available/<APP_NAME>
+sudo nginx -t
+sudo systemctl reload nginx
+pm2 restart <APP_NAME> --update-env
+pm2 save
+```
+
+Exemplo prático preenchido:
+
+```bash
+grep -E '^PORT=' /opt/granacheck/app/.env
+grep -n "proxy_pass" /etc/nginx/sites-available/granacheck
+pm2 status
+curl -i http://127.0.0.1:3000/health
+```
