@@ -1030,9 +1030,12 @@ app.get("/api/help/guide", authMiddleware, requireActiveSubscription, async (req
         },
         {
           campo: "Quantidade de Plantões",
-          significado: "Define a escala usada para calcular adicionais da jornada.",
-          preenchimento: "Selecione 7 ou 8 plantões.",
-          impacto: "Altera horas noturnas, horas excedentes e quantidade de auxílios-alimentação.",
+          significado:
+            "Define a escala usada para calcular adicionais da jornada. A opção Adm (Diarista) deve ser usada por servidores que não trabalham em regime de plantão (7 ou 8), mas em escala administrativa.",
+          preenchimento:
+            "Selecione 7, 8 ou Adm. Em Adm, informe manualmente a quantidade de auxílio alimentação no campo específico.",
+          impacto:
+            "Em 7 e 8, adicional noturno, horas excedentes e auxílio alimentação seguem cálculo automático. Em Adm, não há cálculo automático de adicional noturno e horas excedentes vinculados a plantões; o auxílio informado manualmente é somado aos auxílios de serviço extra 24h, e o adicional noturno de serviço extra 24h continua sendo calculado e exibido normalmente. Preencha corretamente, pois essa opção altera a forma de cálculo.",
         },
         {
           campo: "Escolaridade",

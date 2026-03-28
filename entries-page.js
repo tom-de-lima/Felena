@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const inputValorExtraFestivo = document.getElementById("valorExtraFestivo")
   const inputOutrosDescontos = document.getElementById("outrosDescontos")
   const inputPensaoValor = document.getElementById("pensaoValor")
+  const selectPlantoes = document.getElementById("plantoes")
+  const auxilioAlimentacaoManualField = document.getElementById("auxilioAlimentacaoManualField")
+  const inputQtdAuxilioAlimentacao = document.getElementById("qtdAuxilioAlimentacao")
   const selectPensaoAtiva = document.getElementById("pensaoAtiva")
   const pensaoValorField = document.getElementById("pensaoValorField")
 
@@ -59,6 +62,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!hasPensao) inputPensaoValor.value = formatter.format(0)
   }
 
+  function updatePlantoesVisibility() {
+    const isAdm = selectPlantoes.value === "adm"
+    auxilioAlimentacaoManualField.classList.toggle("hidden", !isAdm)
+    if (!isAdm) inputQtdAuxilioAlimentacao.value = "0"
+  }
+
   function getSelectedFunctionBonuses() {
     return Array.from(
       document.querySelectorAll('input[name="gratificacaoFuncao"]:checked')
@@ -67,9 +76,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function getCalcPayload(overwrite = false) {
     const pensaoAtiva = document.getElementById("pensaoAtiva").value === "1"
+    const isAdm = selectPlantoes.value === "adm"
     return {
       baseAtual: parseBRL(inputBaseAtual.value),
-      plantoes: Number(document.getElementById("plantoes").value),
+      plantoes: isAdm ? "adm" : Number(selectPlantoes.value),
+      quantidadeAuxilioAlimentacaoManual: isAdm
+        ? Number(inputQtdAuxilioAlimentacao.value || 0)
+        : 0,
       escolaridade: Number(document.getElementById("escolaridade").value),
       quinquenio: Number(document.getElementById("quinquenio").value || 0),
       especializacao: Number(document.getElementById("especializacao").value || 0),
@@ -195,5 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   inputPensaoValor.value = formatter.format(0)
 
   selectPensaoAtiva.addEventListener("change", updatePensaoVisibility)
+  selectPlantoes.addEventListener("change", updatePlantoesVisibility)
   updatePensaoVisibility()
+  updatePlantoesVisibility()
 })

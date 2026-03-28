@@ -11,6 +11,7 @@ const EDUCATION_MAP = {
 const SHIFT_MAP = {
   7: { nightHours: 77, ex50: 4, ex70: 4, auxDays: 21 },
   8: { nightHours: 88, ex50: 17, ex70: 15, auxDays: 24 },
+  adm: { nightHours: 0, ex50: 0, ex70: 0, auxDays: 0 },
 }
 
 const FUNCTION_BONUS_OPTIONS = {
@@ -48,9 +49,13 @@ function normalizeFunctionBonuses(value) {
 
 function normalizeInput(rawInput) {
   const input = rawInput || {}
-  const plantoes = [7, 8].includes(Number(input.plantoes))
-    ? Number(input.plantoes)
-    : 7
+  const plantoesRaw = String(input.plantoes || "").trim().toLowerCase()
+  const plantoes =
+    plantoesRaw === "adm"
+      ? "adm"
+      : [7, 8].includes(Number(input.plantoes))
+        ? Number(input.plantoes)
+        : 7
   const escolaridade = [1, 2, 3, 4].includes(Number(input.escolaridade))
     ? Number(input.escolaridade)
     : 1
@@ -74,6 +79,8 @@ function normalizeInput(rawInput) {
     extra10noturno: clampNumber(input.extra10noturno),
     extraFestivo: clampNumber(input.extraFestivo),
     valorExtraFestivo: clampNumber(input.valorExtraFestivo),
+    quantidadeAuxilioAlimentacaoManual:
+      plantoes === "adm" ? clampNumber(input.quantidadeAuxilioAlimentacaoManual) : 0,
     dependentes: clampNumber(input.dependentes),
     sindicalizado:
       input.sindicalizado === true ||
@@ -205,23 +212,29 @@ function calculateCompensation(rawInput) {
   const horasExcedentes50 = (baseReajustada / 160) * 1.5 * shiftRules.ex50
   const horasExcedentes70 = (baseReajustada / 160) * 1.7 * shiftRules.ex70
 
-  let auxAlimentacao = BASE_INICIAL * 0.02 * shiftRules.auxDays
-  const valorAuxAlimentacao24 = BASE_INICIAL * 0.02 * 3 * input.extra24
-  const valorAuxAlimentacao10diurno = BASE_INICIAL * 0.02 * input.extra10diurno
-  const valorAuxAlimentacao10noturno = BASE_INICIAL * 0.02 * input.extra10noturno
-  auxAlimentacao +=
-    valorAuxAlimentacao24 +
-    valorAuxAlimentacao10diurno +
-    valorAuxAlimentacao10noturno
-  const quantidadeAuxiliosAlimentacao =
-    shiftRules.auxDays + input.extra24 * 3 + input.extra10diurno + input.extra10noturno
+  let quantidadeAuxiliosAlimentacao = 0
+  let auxAlimentacao = 0
+  if (input.plantoes === "adm") {
+    quantidadeAuxiliosAlimentacao =
+      input.quantidadeAuxilioAlimentacaoManual + input.extra24 * 3
+    auxAlimentacao = BASE_INICIAL * 0.02 * quantidadeAuxiliosAlimentacao
+  } else {
+    quantidadeAuxiliosAlimentacao =
+      shiftRules.auxDays + input.extra24 * 3 + input.extra10diurno + input.extra10noturno
+    auxAlimentacao = BASE_INICIAL * 0.02 * quantidadeAuxiliosAlimentacao
+  }
 
   const valorExtra24 = 370.0 * input.extra24
   const valorExtra10diurno = 141.48 * input.extra10diurno
   const valorExtra10noturno = 163.25 * input.extra10noturno
-  const valorAdNoturnoExtra24 = educationRules.nightFactor * 11 * input.extra24
-  const valorAdNoturnoExtra10 = educationRules.nightFactor * input.extra10noturno
-  adNoturno += valorAdNoturnoExtra24 + valorAdNoturnoExtra10
+  {
+    const valorAdNoturnoExtra24 = educationRules.nightFactor * 11 * input.extra24
+    adNoturno += valorAdNoturnoExtra24
+  }
+  if (input.plantoes !== "adm") {
+    const valorAdNoturnoExtra10 = educationRules.nightFactor * input.extra10noturno
+    adNoturno += valorAdNoturnoExtra10
+  }
 
   const totalExtraFestivo = input.valorExtraFestivo * input.extraFestivo
   const valorQuinquenio = baseReajustada * 0.05 * input.quinquenio
@@ -308,6 +321,10 @@ function calculateCompensation(rawInput) {
   const totalDescontos = discountItems.reduce((sum, item) => sum + item.value, 0)
   const totalLiquido = totalBruto - totalDescontos
   const regraImpostoRenda = getIncomeTaxRuleLabel(taxResult.baseCalculoIRNova)
+  const quantidadeHorasAdicionalNoturno =
+    input.plantoes === "adm"
+      ? 11 * input.extra24
+      : shiftRules.nightHours + 11 * input.extra24 + input.extra10noturno
 
   const calculated = {
     normalizedInput: input,
@@ -353,7 +370,7 @@ function calculateCompensation(rawInput) {
       validado: true,
     },
     informacoesCalculo: {
-      quantidadeHorasAdicionalNoturno: roundCurrency(shiftRules.nightHours + 11 * input.extra24 + input.extra10noturno),
+      quantidadeHorasAdicionalNoturno: roundCurrency(quantidadeHorasAdicionalNoturno),
       quantidadeHorasExcedentes50: roundCurrency(shiftRules.ex50),
       quantidadeHorasExcedentes70: roundCurrency(shiftRules.ex70),
       quantidadeAuxiliosAlimentacao: roundCurrency(quantidadeAuxiliosAlimentacao),
