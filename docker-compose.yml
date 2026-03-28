@@ -7,7 +7,8 @@ services:
     image: granacheck:latest
     restart: always
     ports:
-    - "80:3000"    environment:
+    - "3001:3000"
+  environment:
       NODE_ENV: production
       PORT: 3000
       APP_TIMEZONE: America/Fortaleza
