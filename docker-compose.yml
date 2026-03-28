@@ -1,28 +1,41 @@
+version: "3.9"
+
 services:
   granacheck:
-    container_name: granacheck_app
+    container_name: "granacheck_app"
     build:
-      context: .
-      dockerfile: Dockerfile
-    image: granacheck:latest
-    restart: always
+      context: "."
+      dockerfile: "Dockerfile"
+    image: "granacheck:latest"
+    restart: "always"
     ports:
-    - "3001:3000"
-  environment:
-      NODE_ENV: production
-      PORT: 3000
-      APP_TIMEZONE: America/Fortaleza
-    env_file:
-      - .env
+      - "3001:3000"
+    environment:
+      NODE_ENV: "production"
+      PORT: "3000"
+      APP_TIMEZONE: "America/Fortaleza"
+      APP_BASE_URL: "https://orqtech.tech"
+      JWT_SECRET: "ALTERAR_NO_PAINEL"
+      ADMIN_JWT_SECRET: "ALTERAR_NO_PAINEL"
+      PIX_KEY: "ALTERAR_NO_PAINEL"
+      MASTER_ADMIN_NAME: "Administrador Master"
+      MASTER_ADMIN_EMAIL: "master@granacheck.local"
+      MASTER_ADMIN_PASSWORD: "ALTERAR_NO_PAINEL"
+      SMTP_HOST: ""
+      SMTP_PORT: "587"
+      SMTP_SECURE: "false"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM: ""
     volumes:
-      - sqlite_data:/app/data
+      - "granacheck_sqlite_data:/app/data"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
-      interval: 30s
-      timeout: 5s
+      interval: "30s"
+      timeout: "5s"
       retries: 5
-      start_period: 20s
+      start_period: "20s"
 
 volumes:
-  sqlite_data:
-    name: granacheck_sqlite_data
+  granacheck_sqlite_data:
+    name: "granacheck_sqlite_data"
